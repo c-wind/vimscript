@@ -137,16 +137,15 @@ func! GetCtagsExcludeCmd()
 endfunc
 
 func! UpdateTagsFile(path)
-    let ls_cmd =  "ls -t1 ".a:path." |head -n 1"
-    let res = system(ls_cmd)
-    "echo res
-    if len(res) && split(res)[0] != "tags"
+    let tags_file = a:path."/tags"
+    let tags_exist = filereadable(tags_file)
+    let cmd_find =  "find ".a:path." -maxdepth 1 -type f -newer ".tags_file
+
+    if !tags_exist || system(cmd_find) != ""
         let exclude = GetCtagsExcludeCmd()
-        "echo exclude
-        "echo "create tags:".a:path."/tags"
-        let mk_tags_cmd = "cd ".a:path.";ctags -R --c-kinds=+p --c++-kinds=+px --fields=+iaS --extra=+q ".exclude.";cd -"
-        "echo mk_tags_cmd
-        let xxx = system(mk_tags_cmd)
+        let cmd_create_tags = "cd ".a:path.";ctags -R --c-kinds=+p --c++-kinds=+px --fields=+iaS --extra=+q ".exclude.";cd -"
+        "echo cmd_create_tags
+        let xxx = system(cmd_create_tags)
         "echo "create_ok".xxx
     endif
 endfunc
@@ -216,7 +215,7 @@ func! OpenSearchWindow(k)
     let path = join(g:source_path, " ")
     let exclude = GetSearchExcludeCmd()
     "echo path
-    let grep_cmd = "find ".path." ". exclude ." -type f|xargs grep -F --exclude-dir='.svn' -Rn ".key
+    let grep_cmd = "find ".path." ". exclude ." -type f  -exec grep -H -F -Rn ".key." {} \\; "
     "echo grep_cmd
     let bytecode = system(grep_cmd)
     set modifiable
@@ -285,6 +284,8 @@ func! FormatFile()
             return
         endif
         e!
+    else
+        :normal gg=G``
     endif
 endfunc
 
@@ -296,7 +297,6 @@ vnoremap ,s :call SelectSearch()<cr>
 nnoremap ,f :call FormatFile()<cr>
 map <F8> :call TestProject()<CR>
 map <F9> :call MakeProject()<CR>
-
 
 "有的vim不支持QuitPre，先检测下
 if exists('##QuitPre')
