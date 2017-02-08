@@ -1,7 +1,7 @@
 " File: supersearch.vim
 " Author: Tian (root AT codecn DOT org)
-" Version: 1.4
-" Last Modified: 2016.1.14
+" Version: 1.8
+" Last Modified: 2016.12.12
 " Copyright: Copyright (C) 2015 ~ 2016 Tian,Teikay
 "
 " The "Super Search" plugin is a source code browser plugin for Vim and provides
@@ -41,6 +41,21 @@
 "最后：
 "        在插件文件的尾部定义了搜索快捷键，你可以自己修改为你喜欢的
 "
+"2016/12/12:
+"   1.添加是否自动加载ctags功能
+"   2.优化读取配置文件代码
+"
+"2016/12/10:
+"   1. 修复在无配置文件情况下搜索时未指定目录问题（之前mac下会报错）
+"   2. 修改搜索结果展示，只显示相对文件名（之前显示全路径）
+"
+"2016/09/07:
+"   1.修复搜索问题
+"
+"2016/08/25:
+"   1.修改检测tags方式.
+"   2.默认在未配置格式化方式时，调用gg=G来格式化当前文件.
+"
 "2016/01/14:
 "   1.修改关闭vim事件检测机制，感谢 zassen
 "
@@ -56,12 +71,12 @@
 
 let g:conf_name = "project.ini"
 let g:project_path = ""
-let g:source_path = []
+let g:source_path = ["."]
 let g:conf_dict = {}
 
 func! FileSupportCheck()
     let ftype = expand("%:e")
-    if ftype ==? "c" || ftype ==? "cpp" || ftype ==? "cc" || ftype ==? "java" || ftype ==? "py" ||  ftype ==? "h" || ftype ==? "go" || ftype ==? "php"
+    if ftype ==? "c" || ftype ==? "cpp" || ftype ==? "cc" || ftype ==? "java" || ftype ==? "py" ||  ftype ==? "h" || ftype ==? "go" || ftype ==? "php" || ftype ==? "java"
         return 1
     endif
     return 0
@@ -70,13 +85,13 @@ endfunc
 func! ReadConfig(f)
     for line in readfile(a:f)
         "去掉无用的信息,只保留第一段配置内容
-        "TODO add trim
-        "let line = trim(line)
-        if stridx(line, "#") == 0
-            continue
+        let field = substitute(line, "#.*", "", "")
+        let field = substitute(field, "//.*", "", "")
+        let field = substitute(field, "\\s$", "", "")
+        let kv = split(field, "=")
+        if len(kv) == 2
+            let g:conf_dict[kv[0]] = kv[1]
         endif
-        let kv = split(line, "=")
-        let g:conf_dict[kv[0]] = kv[1]
     endfor
 endfunc
 
@@ -108,6 +123,7 @@ func! LoadConfig()
         let config_file = findfile(g:conf_name, config_path)
         if config_file != ""
             call ReadConfig(config_file)
+            let g:source_path = []
             for path in split(globpath(config_path, '*'), "\n")
                 if isdirectory(path)
                     let fileName = GetFileName(path)
@@ -167,7 +183,14 @@ func! UpdateTags()
 endfunc
 
 
-function! SuperSearchStart()
+func! CtagsEnable()
+    if has_key(g:conf_dict, "CtagsEnable") && g:conf_dict["CtagsEnable"] == "true"
+        return 1
+    endif
+    return 0
+endfunc
+
+func! SuperSearchStart()
     "是否支持
     if !FileSupportCheck()
         return
@@ -178,28 +201,30 @@ function! SuperSearchStart()
         return
     endif
 
-    call UpdateTags()
+    if CtagsEnable()
+        call UpdateTags()
+    endif
 
-endfunction
+endfunc
 
 
 
 
-func! OpenFile()
+func! OpenSearchResultFile()
     let info = split(getline("."), ":")
     if len(info) < 1
         return
     endif
     let filename = info[0]
     let linenumber = info[1]
+    let fullpath = g:project_path.filename
     "关闭搜索窗口
     call CloseSearchWindow()
-    execute "tabnew +".linenumber." ".filename
-    "execute "edit +".linenumber." ".filename
+    execute "tabnew +".linenumber." ".fullpath
 endfunc
 
 func! GetSearchExcludeCmd()
-    let cmd = "! -name 'tags' ! -name '*.swp'"
+    let cmd = "! -name 'tags' ! -name '*.swp' ! -path '*/.*/*' "
     if has_key(g:conf_dict, "FindExcludeFile")
         for key in split(g:conf_dict["FindExcludeFile"], ",")
             let cmd = cmd . " ! -name '" . key . "'"
@@ -215,17 +240,20 @@ func! OpenSearchWindow(k)
     let path = join(g:source_path, " ")
     let exclude = GetSearchExcludeCmd()
     "echo path
-    let grep_cmd = "find ".path." ". exclude ." -type f  -exec grep -H -F -Rn ".key." {} \\; "
+    let grep_cmd = "find ".path." ". exclude ." -type f  -exec grep -HFRn ".key." {} \\; "
     "echo grep_cmd
     let bytecode = system(grep_cmd)
     set modifiable
-    call append(0, split(bytecode, '\v\n'))
-    nnoremap <buffer> <silent> <CR> : call OpenFile()<CR>
+    for line in split(bytecode,'\v\n')
+        call append(0, substitute(line, g:project_path, "", ""))
+    endfor
+    nnoremap <buffer> <silent> <CR> : call OpenSearchResultFile()<CR>
     nnoremap <buffer> <silent> <ESC> : call CloseSearchWindow()<CR>
     "set nomodifiable
     call search(a:k)
     call matchadd('Search', a:k)
 endfunc
+
 
 func! KeySearch()
     let key = expand("<cword>")
@@ -237,7 +265,7 @@ func! TestProject()
     if len(g:project_path) > 0
         if has_key(g:conf_dict, "Test")
             let cmd = "cd ".g:project_path." ;". g:conf_dict["Test"]." ; cd -"
-            echo cmd
+            "echo cmd
             let bytecode = system(cmd)
             echo bytecode
         endif
@@ -249,7 +277,7 @@ func! MakeProject()
     if len(g:project_path) > 0
         if has_key(g:conf_dict, "Make")
             let cmd = "cd ".g:project_path." ;". g:conf_dict["Make"]." ; cd -"
-            echo cmd
+            "echo cmd
             let bytecode = system(cmd)
             echo bytecode
         endif
@@ -278,6 +306,7 @@ func! FormatFile()
         w!
         let fileName = expand("%:p")
         let cmd = g:conf_dict["Format"]." ".fileName
+        "echo cmd
         let res = system(cmd)
         if len(res) && stridx(res, ":") != -1
             echo res

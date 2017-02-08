@@ -160,6 +160,7 @@ fun! <SID>HtmlIndentSum(lnum, style)
     if a:style == match(getline(a:lnum), '^\s*</\<\('.g:html_indent_tags.'\)\>')
         let open = <SID>HtmlIndentOpen(a:lnum, g:html_indent_tags)
         let close = <SID>HtmlIndentClose(a:lnum, g:html_indent_tags)
+        echo "line:".a:lnum."open:".open." close:".close
         if 0 != open || 0 != close
         return open - close
         endif
@@ -169,6 +170,7 @@ fun! <SID>HtmlIndentSum(lnum, style)
     \ synIDattr(synID(a:lnum, 1, 1), 'name') =~ '\(css\|java\).*' &&
     \ synIDattr(synID(a:lnum, strlen(getline(a:lnum)), 1), 'name')
     \ =~ '\(css\|java\).*'
+
     if a:style == match(getline(a:lnum), '^\s*}')
         return <SID>HtmlIndentOpenAlt(a:lnum) - <SID>HtmlIndentCloseAlt(a:lnum)
     endif
@@ -238,7 +240,9 @@ fun! HtmlIndentGetter(lnum)
     endif
 
     let ind = <SID>HtmlIndentSum(lnum, -1)
+    echo ind
     let ind = ind + <SID>HtmlIndentSum(a:lnum, 0)
+    echo ind
 
     if restore_ic == 0
     setlocal noic

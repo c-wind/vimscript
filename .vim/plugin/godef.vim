@@ -25,6 +25,7 @@ function! GodefUnderCursor()
         let buf = line('.') == 1 ? "" : (join(getline(1, pos[0] - 1), "\n") . "\n")
         let buf .= c == 1 ? "" : getline(pos[0])[:c-2]
         let offs = len(iconv(buf, &encoding, "utf-8"))
+        echo offs
     endif
     silent call Godef("-o=" . offs)
 endfunction

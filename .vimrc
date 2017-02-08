@@ -3,27 +3,18 @@ set iskeyword+=_,$,@,%,#,-
 
 let mapleader = ","
 
-"Tlist 和 wm的设置
-"命令模式输入wm打开Tlist和WM
-set showcmd
+colo desert
 
 "Taglist插件的设置
 let g:Tlist_Use_Right_Window=0
-"let g:Tlist_Use_Right_Window=1
 let g:Tlist_Show_One_File=1
 let g:Tlist_Compact_Format=1
 let Tlist_Exit_OnlyWindow=1
-"let g:winManagerWindowLayout='TagList'
-"let g:Tlist_Process_File_Always=1
 let g:winManagerWindowLayout='FileExplorer|TagList'
 let g:pydiction_location='~/.vim/ftdetect/complete-dict'
 let g:pydiction_menu_height = 3
 
 let Tlist_WinWidth=40
-
-"Tree explorer的设置
-"let g:treeExplVertical=1
-"let g:treeExplWinSize=30
 
 
 "光标在窗口上下边界时距离边界7行即开始滚屏
@@ -32,40 +23,13 @@ set so=7
 "配色
 " Avoid clearing hilight definition in plugins
 if !exists("g:vimrc_loaded")
-
-    " color scheme
-    if has("gui_running")
-        set guioptions-=T "隐藏工具栏
-        set guioptions-=m
-        set guioptions-=L
-        set guioptions-=r
-        color blackboard
-        "colorscheme professional
-        "set guifont=YaHeiConsolasHybrid\ 13
-        set guifont=Monaco\ 13
-        "中文字体
-        set guifontset=Microsoft\ YaHei\ 13
-        "对于html，xml文件，通过ctrl+_来closetag
-        if has("autocmd")
-            autocmd FileType text,xml,html,perl,shell,bash,vim,php,ruby color blackboard
-            autocmd FileType xml,html vmap <C-o> <ESC>'<i<!--<ESC>o<ESC>'>o-->
-            autocmd FileType java,c,cpp,cs color desertEx
-            autocmd FileType html,text,php,vim,c,java,xml,bash,shell,perl setlocal textwidth=100
-            autocmd Filetype html,xml,xsl source ~/.vim/plugin/closetag.vim
-        endif " has("autocmd")
-    else
-        color desert
-        "colorscheme zellner
-        "对于html，xml文件，通过ctrl+_来closetag
-        if has("autocmd")
-            autocmd FileType xml,html vmap <C-o> <ESC>'<i<!--<ESC>o<ESC>'>o-->
-            autocmd FileType html,text,php,vim,c,java,xml,bash,shell,perl setlocal textwidth=100
-            autocmd Filetype html,xml,xsl source ~/.vim/plugin/closetag.vim
-        endif " has("autocmd")
-    endif " has
+    "对于html，xml文件，通过ctrl+_来closetag
+    if has("autocmd")
+        autocmd FileType xml,html vmap <C-o> <ESC>'<i<!--<ESC>o<ESC>'>o-->
+        autocmd FileType go,c vmap <C-o> <ESC>'<i/*<CR><ESC>o<ESC>'>o*/
+        autocmd Filetype html,xml,xsl source ~/.vim/plugin/closetag.vim
+    endif " has("autocmd")
 endif " exists(...)
-"这个是依赖终端的
-set background=dark
 
 "显示行号
 set number
@@ -81,14 +45,9 @@ filetype plugin indent on
 set completeopt=longest,menu
 set runtimepath+=~/.vim/textmateOnly
 set runtimepath+=~/.vim/after
-"so ~/.vim/plugin/supertab.vim
 let g:SuperTabDefaultCompletionType="<C-X><C-O>"
 
 
-"鼠标支持
-"if has('mouse')
-"  set mouse=a
-"endif
 
 "缩进相关
 " 继承前一行的缩进方式，特别适用于多行注释
@@ -100,12 +59,6 @@ set smartindent
 " 使用C样式的缩进
 set cindent
 setlocal cinoptions=:0,g0,(0,w1 shiftwidth=4 tabstop=4 softtabstop=4
-
-"au FileType c,cpp setlocal cinoptions=:0,g0,(0,w1 shiftwidth=4 tabstop=4 softtabstop=4
-"au FileType go setlocal cinoptions=:0,g0,(0,w1 shiftwidth=4 tabstop=4 softtabstop=4
-"au FileType diff  setlocal shiftwidth=4 tabstop=4
-"au FileType html  setlocal autoindent indentexpr=
-"au FileType changelog setlocal textwidth=76
 
 noremap <C-=> <Esc>10<C-w>+
 noremap <C--> <Esc>10<C-w>-
@@ -211,12 +164,10 @@ set novisualbell
 
 nnoremap <space> /
 
-"nnoremap <leader>x :xa!<cr>
 nnoremap <leader>w :w!<cr>
 nnoremap <leader>q :call QuitWithoutSave()<cr>
 nnoremap <leader>x :call QuitWithSave()<cr>
 nnoremap <leader>t :TagbarToggle<cr>
-"nnoremap <leader>t :Tlist<cr>
 
 nnoremap <leader>1 :b1<cr>
 nnoremap <leader>2 :b2<cr>
@@ -238,64 +189,7 @@ endif
 "valgrind 相关
 let g:valgrind_arguments='--leak-check=yes --num-callers=5000'
 
-"字典完成
-set dictionary-=/usr/share/dict/words dictionary+=/usr/share/dict/words
 
-"cscope
-if has("cscope")
-    set csprg=/usr/bin/cscope
-    set csto=0
-    set nocst
-    set nocsverb
-    " add any database in current directory
-    if filereadable("cscope.out")
-        cs add cscope.out
-        " else add database pointed to by environment
-    elseif $CSCOPE_DB != ""
-        cs add $CSCOPE_DB
-    endif
-    set csverb
-endif
-map <C-_> :cstag <C-R>=expand("<cword>")<CR><CR>
-nmap ,,s :cs find s <C-R>=expand("<cword>")<CR><CR>
-nmap ,,g :cs find g <C-R>=expand("<cword>")<CR><CR>
-nmap ,,c :cs find c <C-R>=expand("<cword>")<CR><CR>
-nmap ,,t :cs find t <C-R>=expand("<cword>")<CR><CR>
-nmap ,,e :cs find e <C-R>=expand("<cword>")<CR><CR>
-nmap ,,f :cs find f <C-R>=expand("<cfile>")<CR><CR>
-nmap ,,i :cs find i ^<C-R>=expand("<cfile>")<CR>$<CR>
-nmap ,,d :cs find d <C-R>=expand("<cword>")<CR><CR>
-
-" Using 'CTRL-spacebar' then a search type makes the vim window
-" split horizontally, with search result displayed in
-" the new window.
-
-nmap <C-Space>s :scs find s <C-R>=expand("<cword>")<CR><CR>
-nmap <C-Space>g :scs find g <C-R>=expand("<cword>")<CR><CR>
-nmap <C-Space>c :scs find c <C-R>=expand("<cword>")<CR><CR>
-nmap <C-Space>t :scs find t <C-R>=expand("<cword>")<CR><CR>
-nmap <C-Space>e :scs find e <C-R>=expand("<cword>")<CR><CR>
-nmap <C-Space>f :scs find f <C-R>=expand("<cfile>")<CR><CR>
-nmap <C-Space>i :scs find i ^<C-R>=expand("<cfile>")<CR>$<CR>
-nmap <C-Space>d :scs find d <C-R>=expand("<cword>")<CR><CR>
-
-" Hitting CTRL-space *twice* before the search type does a vertical
-" split instead of a horizontal one
-
-nmap <C-Space><C-Space>s
-            \:vert scs find s <C-R>=expand("<cword>")<CR><CR>
-nmap <C-Space><C-Space>g
-            \:vert scs find g <C-R>=expand("<cword>")<CR><CR>
-nmap <C-Space><C-Space>c
-            \:vert scs find c <C-R>=expand("<cword>")<CR><CR>
-nmap <C-Space><C-Space>t
-            \:vert scs find t <C-R>=expand("<cword>")<CR><CR>
-nmap <C-Space><C-Space>e
-            \:vert scs find e <C-R>=expand("<cword>")<CR><CR>
-nmap <C-Space><C-Space>i
-            \:vert scs find i ^<C-R>=expand("<cfile>")<CR>$<CR>
-nmap <C-Space><C-Space>d
-            \:vert scs find d <C-R>=expand("<cword>")<CR><CR>
 "runtime ftplugin/man.vim
 let Vimplate = "$HOME/bin/vimplate"
 fun! ReadMan()
@@ -387,11 +281,6 @@ map M :call ReadMan()<CR>
 "csupport
 let g:alternateNoDefaultAlternate = 1
 
-"a.vim
-nnoremap <silent> <F12> :A<CR>
-
-"nmap wm :WMToggle<cr>
-"nmap wm :Tlist<cr>
 
 " 双反斜杠\\即可打开bufexplorer
 map <leader><leader> \be
@@ -408,10 +297,9 @@ inoremap { {}<ESC>i
 inoremap } <c-r>=ClosePair('}')<CR>
 inoremap [ []<ESC>i
 inoremap ] <c-r>=ClosePair(']')<CR>
-"inoremap < <><ESC>i
-"inoremap > <c-r>=ClosePair('>')<CR>
 
 inoremap . .<C-X><C-O>
+
 function ClosePair(char)
     if getline('.')[col('.') - 1] == a:char
         return "\<Right>"
@@ -420,23 +308,6 @@ function ClosePair(char)
     endif
 endf
 
-" mapping
-" 如果下拉菜单弹出，回车映射为接受当前所选项目，否则，仍映射为回车；
-"
-" 如果下拉菜单弹出，CTRL-J映射为在下拉菜单中向下翻页。否则映射为CTRL-X CTRL-O；
-"
-" 如果下拉菜单弹出，CTRL-K映射为在下拉菜单中向上翻页，否则仍映射为CTRL-K；
-"
-" 如果下拉菜单弹出，CTRL-U映射为CTRL-E，即停止补全，否则，仍映射为CTRL-U；
-inoremap <expr> <CR>       pumvisible()?"\<C-Y>":"\<CR>"
-inoremap <expr> <C-J>      pumvisible()?"\<PageDown>\<C-N>\<C-P>":"\<C-X><C-O>"
-inoremap <expr> <C-K>      pumvisible()?"\<PageUp>\<C-P>\<C-N>":"\<C-K>"
-
-inoremap <expr> <C-U>      pumvisible()?"\<C-E>":"\<C-U>"a
-
-inoremap <expr> <cr>       pumvisible() ? "\<c-y>" : "\<c-g>u\<cr>"
-inoremap <expr> <c-n>      pumvisible() ? "\<c-n>" : "\<c-n>\<c-r>=pumvisible() ? \"\\<down>\" : \"\\<cr>\""
-inoremap <expr> <m-;>      pumvisible() ? "\<c-n>" : "\<c-x>\<c-o>\<c-n>\<c-p>\<c-r>=pumvisible() ? \"\\<down>\" : \"\\<cr>\""
 
 
 "选中一段文字并全文搜索这段文字
@@ -447,10 +318,6 @@ inoremap <expr> <m-;>      pumvisible() ? "\<c-n>" : "\<c-x>\<c-o>\<c-n>\<c-p>\<
 
 :runtime! ftplugin/man.vim
 set keywordprg=dicty
-"ab ssh #!/bin/bash<CR><CR>
-"ab ppy #!/usr/bin/python<CR><CR>
-"ab ppl #!/usr/bin/perl<CR><CR><{}>
-"ab rru #!/usr/bin/ruby<CR><CR><{}>
 
 set fileencodings=utf-8,gb18030,utf-16,big5
 
@@ -476,32 +343,32 @@ highlight PmenuSbar ctermbg=7 guibg=DarkGray
 highlight PmenuThumb ctermbg=7
 
 let g:tagbar_type_go = {
-    \ 'ctagstype' : 'go',
-    \ 'kinds'     : [
-        \ 'p:package',
-        \ 'i:imports:1',
-        \ 'c:constants',
-        \ 'v:variables',
-        \ 't:types',
-        \ 'n:interfaces',
-        \ 'w:fields',
-        \ 'e:embedded',
-        \ 'm:methods',
-        \ 'r:constructor',
-        \ 'f:functions'
-    \ ],
-    \ 'sro' : '.',
-    \ 'kind2scope' : {
-        \ 't' : 'ctype',
-        \ 'n' : 'ntype'
-    \ },
-    \ 'scope2kind' : {
-        \ 'ctype' : 't',
-        \ 'ntype' : 'n'
-    \ },
-    \ 'ctagsbin'  : 'gotags',
-    \ 'ctagsargs' : '-sort -silent'
-\ }
+            \ 'ctagstype' : 'go',
+            \ 'kinds'     : [
+            \ 'p:package',
+            \ 'i:imports:1',
+            \ 'c:constants',
+            \ 'v:variables',
+            \ 't:types',
+            \ 'n:interfaces',
+            \ 'w:fields',
+            \ 'e:embedded',
+            \ 'm:methods',
+            \ 'r:constructor',
+            \ 'f:functions'
+            \ ],
+            \ 'sro' : '.',
+            \ 'kind2scope' : {
+            \ 't' : 'ctype',
+            \ 'n' : 'ntype'
+            \ },
+            \ 'scope2kind' : {
+            \ 'ctype' : 't',
+            \ 'ntype' : 'n'
+            \ },
+            \ 'ctagsbin'  : 'gotags',
+            \ 'ctagsargs' : '-sort -silent'
+            \ }
 
 let g:tagbar_left = 1
 let g:tagbar_autofocus = 1
